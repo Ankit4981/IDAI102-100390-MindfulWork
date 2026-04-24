@@ -1,0 +1,35 @@
+# ═══════════════════════════════════════════════════════════
+#  MindfulWork — Python Dependencies
+#  FutureForward Wellness Platform
+#  Last updated: 2026-04-21
+# ═══════════════════════════════════════════════════════════
+
+# ── Core Framework ──────────────────────────────────────────
+streamlit>=1.35.0,<2.0.0          # Web app framework
+
+# ── Data & Numerics ─────────────────────────────────────────
+pandas>=2.2.0,<3.0.0              # Data manipulation & analysis
+numpy>=1.26.0,<2.0.0              # Numerical computing
+
+# ── Visualisation ───────────────────────────────────────────
+plotly>=5.22.0,<6.0.0             # Interactive charts & graphs
+
+# ── Date / Time ─────────────────────────────────────────────
+python-dateutil>=2.9.0            # Extended date parsing utilities
+
+# ── Security & Hashing ──────────────────────────────────────
+bcrypt>=4.1.0                     # Secure password hashing (replace plain-text passwords in production)
+
+# ── Environment & Configuration ─────────────────────────────
+python-dotenv>=1.0.0              # Load .env files for secrets management
+
+# ── Optional: Enhanced Streamlit Components ─────────────────
+# Uncomment the lines below if you want richer UI components:
+# streamlit-option-menu>=0.3.13   # Styled sidebar/nav menus
+# streamlit-extras>=0.4.3         # Handy Streamlit utility widgets
+# streamlit-lottie>=0.0.5         # Lottie animation support
+
+# ── Optional: Persistence / Export ──────────────────────────
+# Uncomment to enable session persistence or PDF exports:
+# openpyxl>=3.1.2                 # Excel export (.xlsx)
+# reportlab>=4.2.0                # PDF generation

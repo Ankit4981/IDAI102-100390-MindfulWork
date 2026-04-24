@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>MindfulWork – Smart Stress Relief Pod App</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #21262d;
+    --surface3: #2d333b;
+    --accent: #58a6ff;
+    --accent2: #3fb950;
+    --accent3: #d2a8ff;
+    --accent4: #ffa657;
+    --text: #e6edf3;
+    --text2: #8b949e;
+    --text3: #6e7681;
+    --border: #30363d;
+    --red: #f85149;
+    --yellow: #e3b341;
+    --teal: #39d353;
+    --calm: #7ee787;
+    --stress-low: #3fb950;
+    --stress-med: #e3b341;
+    --stress-high: #f85149;
+    --pod-glow: rgba(88, 166, 255, 0.15);
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 24px 16px;
+  }
+
+  .phone-frame {
+    width: 390px;
+    min-height: 844px;
+    background: var(--surface);
+    border-radius: 48px;
+    border: 2px solid var(--border);
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 40px 100px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05);
+    flex-shrink: 0;
+  }
+
+  /* Notch */
+  .phone-frame::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 120px; height: 30px;
+    background: #000;
+    border-radius: 0 0 20px 20px;
+    z-index: 100;
+  }
+
+  .screen {
+    display: none;
+    flex-direction: column;
+    min-height: 844px;
+    animation: fadeIn 0.3s ease;
+  }
+  .screen.active { display: flex; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ── NAV BAR ── */
+  .nav-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 48px 24px 16px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 10;
+  }
+  .nav-bar h2 { font-family: 'DM Serif Display', serif; font-size: 20px; font-weight: 400; }
+  .nav-icon { width: 36px; height: 36px; background: var(--surface2); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 1px solid var(--border); font-size: 16px; }
+
+  /* ── BOTTOM TAB ── */
+  .tab-bar {
+    display: flex;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 12px 0 24px;
+    position: sticky; bottom: 0;
+  }
+  .tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    padding: 8px 0;
+    border-radius: 12px;
+    transition: all 0.2s;
+  }
+  .tab .tab-icon { font-size: 22px; }
+  .tab .tab-label { font-size: 10px; color: var(--text3); font-weight: 500; letter-spacing: 0.3px; }
+  .tab.active .tab-label { color: var(--accent); }
+  .tab.active .tab-icon { filter: drop-shadow(0 0 8px var(--accent)); }
+
+  /* ── SCROLL AREA ── */
+  .scroll-area { flex: 1; overflow-y: auto; padding: 20px 20px 8px; }
+  .scroll-area::-webkit-scrollbar { width: 3px; }
+  .scroll-area::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+    margin-bottom: 16px;
+  }
+  .card-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text2);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+  }
+
+  /* ── STRESS GAUGE ── */
+  .stress-gauge {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 0;
+  }
+  .gauge-ring {
+    width: 140px; height: 140px;
+    border-radius: 50%;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 12px;
+  }
+  .gauge-ring svg { position: absolute; top: 0; left: 0; transform: rotate(-90deg); }
+  .gauge-inner {
+    text-align: center;
+    position: relative; z-index: 1;
+  }
+  .gauge-value { font-size: 36px; font-weight: 600; line-height: 1; }
+  .gauge-label { font-size: 11px; color: var(--text2); margin-top: 2px; }
+  .stress-tag {
+    display: inline-block;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-top: 4px;
+  }
+  .tag-low { background: rgba(63,185,80,0.15); color: var(--stress-low); }
+  .tag-med { background: rgba(227,179,65,0.15); color: var(--stress-med); }
+  .tag-high { background: rgba(248,81,73,0.15); color: var(--stress-high); }
+
+  /* ── AI SUGGESTION BANNER ── */
+  .ai-banner {
+    background: linear-gradient(135deg, rgba(88,166,255,0.12), rgba(210,168,255,0.08));
+    border: 1px solid rgba(88,166,255,0.25);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 16px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .ai-banner:hover { border-color: rgba(88,166,255,0.5); }
+  .ai-dot { width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent3)); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .ai-text { flex: 1; }
+  .ai-text strong { display: block; font-size: 13px; margin-bottom: 3px; }
+  .ai-text span { font-size: 12px; color: var(--text2); line-height: 1.5; }
+  .ai-arrow { color: var(--accent); align-self: center; font-size: 18px; }
+
+  /* ── QUICK STATS ── */
+  .stats-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+  .stat-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 10px;
+    text-align: center;
+  }
+  .stat-num { font-size: 22px; font-weight: 700; }
+  .stat-label { font-size: 10px; color: var(--text2); margin-top: 2px; }
+
+  /* ── SESSION CARD ── */
+  .session-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .session-card:hover { border-color: var(--accent); background: var(--surface3); }
+  .session-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+  .session-info { flex: 1; }
+  .session-info strong { display: block; font-size: 14px; }
+  .session-info span { font-size: 12px; color: var(--text2); }
+  .session-badge { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .badge-now { background: rgba(63,185,80,0.15); color: var(--stress-low); }
+  .badge-soon { background: rgba(88,166,255,0.15); color: var(--accent); }
+  .badge-booked { background: rgba(139,148,158,0.15); color: var(--text2); }
+
+  /* ── BUTTONS ── */
+  .btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px 24px;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif;
+    width: 100%;
+  }
+  .btn-primary { background: var(--accent); color: #000; }
+  .btn-primary:hover { background: #79c0ff; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(88,166,255,0.3); }
+  .btn-secondary { background: var(--surface3); color: var(--text); border: 1px solid var(--border); }
+  .btn-secondary:hover { border-color: var(--accent); }
+  .btn-danger { background: rgba(248,81,73,0.1); color: var(--red); border: 1px solid rgba(248,81,73,0.3); }
+
+  /* ── SLIDER ── */
+  .slider-row { margin-bottom: 20px; }
+  .slider-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .slider-header span { font-size: 13px; color: var(--text2); }
+  .slider-header strong { font-size: 13px; }
+  input[type=range] {
+    width: 100%;
+    -webkit-appearance: none;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--surface3);
+    outline: none;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    box-shadow: 0 0 12px rgba(88,166,255,0.4);
+  }
+
+  /* ── MOOD GRID ── */
+  .mood-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 16px; }
+  .mood-chip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 12px 6px;
+    border-radius: 12px;
+    border: 2px solid var(--border);
+    cursor: pointer;
+    font-size: 22px;
+    transition: all 0.2s;
+    background: var(--surface2);
+  }
+  .mood-chip span { font-size: 10px; color: var(--text2); }
+  .mood-chip.selected { border-color: var(--accent); background: rgba(88,166,255,0.1); }
+  .mood-chip:hover { border-color: var(--text2); }
+
+  /* ── PROGRESS BAR ── */
+  .progress-bar { height: 6px; background: var(--surface3); border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 3px; transition: width 1s ease; }
+
+  /* ── BREATHE SCREEN ── */
+  .breathe-circle {
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(88,166,255,0.3), rgba(88,166,255,0.05));
+    border: 2px solid rgba(88,166,255,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+    font-size: 48px;
+    position: relative;
+    transition: all 4s ease;
+  }
+  .breathe-circle.expand {
+    width: 240px; height: 240px;
+    box-shadow: 0 0 60px rgba(88,166,255,0.3);
+  }
+  .breathe-text { text-align: center; margin-bottom: 24px; }
+  .breathe-phase { font-size: 22px; font-weight: 600; margin-bottom: 6px; }
+  .breathe-count { font-size: 48px; font-weight: 700; color: var(--accent); }
+  .breathe-instruction { font-size: 14px; color: var(--text2); }
+
+  /* ── JOURNAL ── */
+  .journal-textarea {
+    width: 100%;
+    background: var(--surface3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    padding: 14px;
+    resize: none;
+    outline: none;
+    line-height: 1.6;
+    margin-bottom: 16px;
+  }
+  .journal-textarea::placeholder { color: var(--text3); }
+  .journal-textarea:focus { border-color: var(--accent); }
+
+  /* ── RATING STARS ── */
+  .star-row { display: flex; gap: 8px; justify-content: center; margin: 12px 0; }
+  .star { font-size: 32px; cursor: pointer; opacity: 0.3; transition: all 0.15s; }
+  .star.lit { opacity: 1; filter: drop-shadow(0 0 6px gold); }
+
+  /* ── SCHEDULER ── */
+  .time-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
+  .time-chip {
+    padding: 10px 6px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    font-size: 13px;
+    text-align: center;
+    cursor: pointer;
+    background: var(--surface2);
+    transition: all 0.2s;
+  }
+  .time-chip.selected { background: rgba(88,166,255,0.1); border-color: var(--accent); color: var(--accent); }
+  .time-chip.taken { opacity: 0.35; cursor: not-allowed; text-decoration: line-through; }
+  .time-chip:not(.taken):hover { border-color: var(--text2); }
+
+  /* ── CHART ── */
+  .mini-chart { display: flex; align-items: flex-end; gap: 6px; height: 80px; margin-top: 8px; }
+  .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .bar { width: 100%; border-radius: 4px 4px 0 0; transition: height 0.5s; }
+  .bar-day { font-size: 10px; color: var(--text3); }
+
+  /* ── TOGGLE ── */
+  .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .toggle-row:last-child { border-bottom: none; }
+  .toggle-info strong { display: block; font-size: 14px; }
+  .toggle-info span { font-size: 12px; color: var(--text2); }
+  .toggle {
+    width: 44px; height: 24px;
+    background: var(--surface3);
+    border-radius: 12px;
+    position: relative;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    transition: background 0.2s;
+    flex-shrink: 0;
+  }
+  .toggle.on { background: var(--accent); border-color: var(--accent); }
+  .toggle::after {
+    content: '';
+    position: absolute;
+    width: 18px; height: 18px;
+    background: #fff;
+    border-radius: 50%;
+    top: 2px; left: 2px;
+    transition: left 0.2s;
+  }
+  .toggle.on::after { left: 22px; }
+
+  /* ── PROFILE HEADER ── */
+  .profile-hero {
+    background: linear-gradient(160deg, rgba(88,166,255,0.15), rgba(210,168,255,0.08));
+    border-bottom: 1px solid var(--border);
+    padding: 40px 24px 24px;
+    display: flex;
+    gap: 16px;
+    align-items: center;
+  }
+  .avatar {
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent3));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px;
+    border: 3px solid rgba(88,166,255,0.4);
+    flex-shrink: 0;
+  }
+  .profile-info h3 { font-size: 20px; font-weight: 600; }
+  .profile-info p { font-size: 13px; color: var(--text2); margin-top: 2px; }
+  .xp-bar { margin-top: 10px; }
+  .xp-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--text2); margin-bottom: 4px; }
+
+  .section-label { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-bottom: 12px; }
+  .section-gap { margin-bottom: 20px; }
+
+  /* ── LOGIN ── */
+  .login-screen {
+    background: var(--bg);
+    min-height: 844px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 32px;
+    gap: 32px;
+  }
+  .login-logo { text-align: center; }
+  .login-logo .logo-icon { font-size: 72px; margin-bottom: 12px; filter: drop-shadow(0 0 30px rgba(88,166,255,0.5)); }
+  .login-logo h1 { font-family: 'DM Serif Display', serif; font-size: 32px; font-weight: 400; }
+  .login-logo p { font-size: 14px; color: var(--text2); margin-top: 6px; }
+  .input-field {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    color: var(--text);
+    font-size: 15px;
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+    margin-bottom: 12px;
+    transition: border-color 0.2s;
+  }
+  .input-field:focus { border-color: var(--accent); }
+  .login-footer { font-size: 12px; color: var(--text3); text-align: center; }
+  .link-text { color: var(--accent); cursor: pointer; }
+
+  /* ── MOOD SYNC ── */
+  .pod-preview {
+    background: linear-gradient(135deg, var(--surface2), var(--surface3));
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .pod-preview::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 150px; height: 150px;
+    background: radial-gradient(circle, rgba(88,166,255,0.15), transparent);
+    border-radius: 50%;
+  }
+  .pod-label { font-size: 12px; color: var(--text2); margin-bottom: 4px; }
+  .pod-value { font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .pod-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+
+  .color-orb {
+    width: 40px; height: 40px; border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.1);
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+  .color-orb:hover { transform: scale(1.15); }
+  .color-row { display: flex; gap: 10px; margin-top: 10px; }
+
+  .scent-chip {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .scent-chip.active { background: rgba(88,166,255,0.1); border-color: var(--accent); color: var(--accent); }
+  .scent-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+
+  .notification-dot {
+    width: 8px; height: 8px;
+    background: var(--red);
+    border-radius: 50%;
+    position: absolute;
+    top: -2px; right: -2px;
+  }
+</style>
+</head>
+<body>
+
+<div class="phone-frame">
+
+  <!-- ════════════════════════════════════════
+       SCREEN 1: LOGIN
+       ════════════════════════════════════════ -->
+  <div class="screen active" id="screen-login">
+    <div class="login-screen">
+      <div class="login-logo">
+        <div class="logo-icon">🧘</div>
+        <h1>MindfulWork</h1>
+        <p>Your Smart Stress Relief Pod</p>
+      </div>
+      <div style="width:100%">
+        <input class="input-field" placeholder="Employee ID or Email" value="riya.sharma@futureforward.com"/>
+        <input class="input-field" type="password" placeholder="Password" value="••••••••"/>
+        <button class="btn btn-primary" onclick="goTo('screen-home')">Sign In &nbsp;→</button>
+        <div class="login-footer" style="margin-top:16px">
+          New employee? <span class="link-text">Request access</span>
+        </div>
+      </div>
+      <div style="text-align:center; color:var(--text3); font-size:12px; line-height:1.6">
+        🔒 Secured by FutureForward Wellness<br/>
+        Stress data stays private & encrypted
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════
+       SCREEN 2: HOME DASHBOARD
+       ════════════════════════════════════════ -->
+  <div class="screen" id="screen-home">
+    <div class="nav-bar">
+      <div style="display:flex;flex-direction:column">
+        <span style="font-size:12px;color:var(--text2)">Good afternoon, Riya 👋</span>
+        <h2>Dashboard</h2>
+      </div>
+      <div style="display:flex;gap:10px">
+        <div class="nav-icon" style="position:relative" onclick="goTo('screen-journal')">📓<div class="notification-dot"></div></div>
+        <div class="nav-icon">🔔</div>
+      </div>
+    </div>
+
+    <div class="scroll-area">
+
+      <!-- Stress Gauge -->
+      <div class="card">
+        <div class="card-title">Current Stress Level</div>
+        <div class="stress-gauge">
+          <div class="gauge-ring">
+            <svg width="140" height="140" viewBox="0 0 140 140">
+              <circle cx="70" cy="70" r="58" fill="none" stroke="var(--surface3)" stroke-width="10"/>
+              <circle cx="70" cy="70" r="58" fill="none" stroke="var(--stress-med)" stroke-width="10"
+                stroke-dasharray="364" stroke-dashoffset="160" stroke-linecap="round"/>
+            </svg>
+            <div class="gauge-inner">
+              <div class="gauge-value" style="color:var(--stress-med)">56</div>
+              <div class="gauge-label">/ 100</div>
+            </div>
+          </div>
+          <div class="stress-tag tag-med">Moderate Stress</div>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:16px;font-size:12px;color:var(--text2)">
+          <span>📊 Wearable data</span>
+          <span>🎤 Voice tone: Tense</span>
+          <span>📝 Survey: 6/10</span>
+        </div>
+      </div>
+
+      <!-- AI Banner -->
+      <div class="ai-banner" onclick="goTo('screen-moodsync')">
+        <div class="ai-dot">🤖</div>
+        <div class="ai-text">
+          <strong>MoodSync AI Suggestion</strong>
+          <span>Your stress pattern matches a "pre-meeting spike". A 15-min calm session with blue light + ocean sounds is recommended.</span>
+        </div>
+        <div class="ai-arrow">›</div>
+      </div>
+
+      <!-- Quick Stats -->
+      <div class="stats-row">
+        <div class="stat-box">
+          <div class="stat-num" style="color:var(--accent)">3</div>
+          <div class="stat-label">Sessions this week</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num" style="color:var(--stress-low)">-22%</div>
+          <div class="stat-label">Stress reduction</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num" style="color:var(--accent3)">🔥5</div>
+          <div class="stat-label">Day streak</div>
+        </div>
+      </div>
+
+      <!-- Weekly Chart -->
+      <div class="card">
+        <div class="card-title">This Week's Stress Trend</div>
+        <div class="mini-chart">
+          <div class="bar-col"><div class="bar" style="height:55%;background:var(--stress-low)"></div><div class="bar-day">Mon</div></div>
+          <div class="bar-col"><div class="bar" style="height:70%;background:var(--stress-med)"></div><div class="bar-day">Tue</div></div>
+          <div class="bar-col"><div class="bar" style="height:85%;background:var(--stress-high)"></div><div class="bar-day">Wed</div></div>
+          <div class="bar-col"><div class="bar" style="height:60%;background:var(--stress-med)"></div><div class="bar-day">Thu</div></div>
+          <div class="bar-col"><div class="bar" style="height:56%;background:var(--stress-med)"></div><div class="bar-day">Fri</div></div>
+          <div class="bar-col"><div class="bar" style="height:30%;background:var(--stress-low)"></div><div class="bar-day">Sat</div></div>
+          <div class="bar-col"><div class="bar" style="height:20%;background:var(--stress-low)"></div><div class="bar-day">Sun</div></div>
+        </div>
+      </div>
+
+      <!-- Sessions -->
+      <div class="section-label">Today's Pod Sessions</div>
+      <div class="session-card" onclick="goTo('screen-pod')">
+        <div class="session-icon" style="background:rgba(63,185,80,0.15)">🌊</div>
+        <div class="session-info">
+          <strong>Ocean Calm – Pod A</strong>
+          <span>Available now · 20 min</span>
+        </div>
+        <div class="session-badge badge-now">Available</div>
+      </div>
+      <div class="session-card" onclick="goTo('screen-schedule')">
+        <div class="session-icon" style="background:rgba(88,166,255,0.15)">🔮</div>
+        <div class="session-info">
+          <strong>Focus Flow – Pod B</strong>
+          <span>3:30 PM · 15 min</span>
+        </div>
+        <div class="session-badge badge-soon">Booked</div>
+      </div>
+      <div class="session-card">
+        <div class="session-icon" style="background:rgba(210,168,255,0.15)">🌿</div>
+        <div class="session-info">
+          <strong>Forest Breathe – Pod C</strong>
+          <span>5:00 PM · 25 min</span>
+        </div>
+        <div class="session-badge badge-booked">Available</div>
+      </div>
+
+      <div style="height:12px"></div>
+    </div>
+
+    <div class="tab-bar">
+      <div class="tab active" onclick="goTo('screen-home')"><div class="tab-icon">🏠</div><div class="tab-label">Home</div></div>
+      <div class="tab" onclick="goTo('screen-moodsync')"><div class="tab-icon">🤖</div><div class="tab-label">MoodSync</div></div>
+      <div class="tab" onclick="goTo('screen-schedule')"><div class="tab-icon">📅</div><div class="tab-label">Schedule</div></div>
+      <div class="tab" onclick="goTo('screen-breathe')"><div class="tab-icon">🫁</div><div class="tab-label">Breathe</div></div>
+      <div class="tab" onclick="goTo('screen-journal')"><div class="tab-icon">📓</div><div class="tab-label">Journal</div></div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════
+       SCREEN 3: MOODSYNC AI
+       ════════════════════════════════════════ -->
+  <div class="screen" id="screen-moodsync">
+    <div class="nav-bar">
+      <div class="nav-icon" onclick="goTo('screen-home')">←</div>
+      <h2>MoodSync AI</h2>
+      <div class="nav-icon">ℹ</div>
+    </div>
+
+    <div class="scroll-area">
+      <div class="section-label section-gap">How are you feeling right now?</div>
+      <div class="mood-grid" id="mood-grid">
+        <div class="mood-chip selected" onclick="selectMood(this)">😰<span>Anxious</span></div>
+        <div class="mood-chip" onclick="selectMood(this)">😤<span>Frustrated</span></div>
+        <div class="mood-chip" onclick="selectMood(this)">😔<span>Low</span></div>
+        <div class="mood-chip" onclick="selectMood(this)">😐<span>Neutral</span></div>
+        <div class="mood-chip" onclick="selectMood(this)">😊<span>Okay</span></div>
+        <div class="mood-chip" onclick="selectMood(this)">😴<span>Tired</span></div>
+        <div class="mood-chip" onclick="selectMood(this)">🤯<span>Overwhelmed</span></div>
+        <div class="mood-chip" onclick="selectMood(this)">😌<span>Calm</span></div>
+      </div>
+
+      <!-- AI Recommendation Card -->
+      <div class="card" style="border-color:rgba(88,166,255,0.3)">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+          <div class="ai-dot" style="width:32px;height:32px;font-size:16px">🤖</div>
+          <div>
+            <div style="font-size:13px;font-weight:600">AI-Generated Pod Setup</div>
+            <div style="font-size:11px;color:var(--text2)">Based on stress level 56 · Anxious mood</div>
+          </div>
+        </div>
+
+        <div class="pod-grid">
+          <div class="pod-preview">
+            <div class="pod-label">💡 Lighting</div>
+            <div class="pod-value">🔵 Soft Blue</div>
+            <div style="font-size:11px;color:var(--text2);margin-top:4px">Reduces cortisol</div>
+          </div>
+          <div class="pod-preview">
+            <div class="pod-label">🎵 Music</div>
+            <div class="pod-value">🌊 Ocean</div>
+            <div style="font-size:11px;color:var(--text2);margin-top:4px">432 Hz, 74 BPM</div>
+          </div>
+          <div class="pod-preview">
+            <div class="pod-label">🌸 Aroma</div>
+            <div class="pod-value">🌿 Lavender</div>
+            <div style="font-size:11px;color:var(--text2);margin-top:4px">Anxiety relief</div>
+          </div>
+          <div class="pod-preview">
+            <div class="pod-label">⏱ Duration</div>
+            <div class="pod-value">15 min</div>
+            <div style="font-size:11px;color:var(--text2);margin-top:4px">Micro-session</div>
+          </div>
+        </div>
+
+        <div style="background:rgba(63,185,80,0.08);border:1px solid rgba(63,185,80,0.2);border-radius:10px;padding:12px;font-size:12px;color:var(--stress-low);line-height:1.5;margin-bottom:14px">
+          💡 <strong>Why this works:</strong> Blue-spectrum light lowers heart rate variability. Lavender diffusion reduces anxiety by 35% in controlled studies. Ocean sounds at 74 BPM synchronize with target relaxed heart rate.
+        </div>
+        <button class="btn btn-primary" onclick="goTo('screen-pod')">Apply to Pod &nbsp;→</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Past Mood Patterns</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <div style="padding:6px 12px;background:rgba(248,81,73,0.1);border-radius:20px;font-size:12px;color:var(--red)">😰 Mon 9 AM</div>
+          <div style="padding:6px 12px;background:rgba(227,179,65,0.1);border-radius:20px;font-size:12px;color:var(--yellow)">😤 Tue 2 PM</div>
+          <div style="padding:6px 12px;background:rgba(63,185,80,0.1);border-radius:20px;font-size:12px;color:var(--stress-low)">😌 Wed Eve</div>
+          <div style="padding:6px 12px;background:rgba(248,81,73,0.1);border-radius:20px;font-size:12px;color:var(--red)">🤯 Thu 11 AM</div>
+        </div>
+        <div style="font-size:12px;color:var(--text2);margin-top:12px">📊 You tend to peak stress before 10 AM meetings. MoodSync suggests a 7:45 AM pod booking.</div>
+      </div>
+
+      <div style="height:12px"></div>
+    </div>
+
+    <div class="tab-bar">
+      <div class="tab" onclick="goTo('screen-home')"><div class="tab-icon">🏠</div><div class="tab-label">Home</div></div>
+      <div class="tab active" onclick="goTo('screen-moodsync')"><div class="tab-icon">🤖</div><div class="tab-label">MoodSync</div></div>
+      <div class="tab" onclick="goTo('screen-schedule')"><div class="tab-icon">📅</div><div class="tab-label">Schedule</div></div>
+      <div class="tab" onclick="goTo('screen-breathe')"><div class="tab-icon">🫁</div><div class="tab-label">Breathe</div></div>
+      <div class="tab" onclick="goTo('screen-journal')"><div class="tab-icon">📓</div><div class="tab-label">Journal</div></div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════
+       SCREEN 4: POD CONTROL
+       ════════════════════════════════════════ -->
+  <div class="screen" id="screen-pod">
+    <div class="nav-bar">
+      <div class="nav-icon" onclick="goTo('screen-home')">←</div>
+      <h2>Pod Control · A</h2>
+      <div class="nav-icon" style="background:rgba(63,185,80,0.15);border-color:var(--stress-low);color:var(--stress-low)">●</div>
+    </div>
+
+    <div class="scroll-area">
+      <div style="background:linear-gradient(135deg,rgba(88,166,255,0.1),rgba(210,168,255,0.06));border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:20px;text-align:center">
+        <div style="font-size:48px;margin-bottom:8px">🪑</div>
+        <div style="font-size:16px;font-weight:600">Biometric Chair Active</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:4px">Heart rate: 82 bpm · Tension: Moderate</div>
+        <div style="height:6px;background:var(--surface3);border-radius:3px;margin-top:12px">
+          <div class="progress-fill" style="width:56%;background:var(--stress-med)"></div>
+        </div>
+        <div style="font-size:11px;color:var(--text2);margin-top:4px">Session: 4 min 32 sec remaining</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">💡 Light Therapy</div>
+        <div class="slider-row">
+          <div class="slider-header"><span>Color Temperature</span><strong id="light-val">Cool Blue</strong></div>
+          <input type="range" min="1" max="5" value="2" oninput="updateLight(this.value)"/>
+        </div>
+        <div class="slider-row">
+          <div class="slider-header"><span>Brightness</span><strong id="bright-val">40%</strong></div>
+          <input type="range" min="0" max="100" value="40" oninput="document.getElementById('bright-val').innerText=this.value+'%'"/>
+        </div>
+        <div class="color-row">
+          <div class="color-orb" style="background:#4FC3F7" title="Cool Blue"></div>
+          <div class="color-orb" style="background:#9575CD" title="Violet Calm"></div>
+          <div class="color-orb" style="background:#81C784" title="Forest Green"></div>
+          <div class="color-orb" style="background:#FFB74D" title="Warm Amber"></div>
+          <div class="color-orb" style="background:#F06292" title="Rose Glow"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🎵 AI Music – Ocean Calm</div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+          <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,#4FC3F7,#0288D1);display:flex;align-items:center;justify-content:center;font-size:24px">🌊</div>
+          <div>
+            <div style="font-size:14px;font-weight:600">Deep Ocean Waves</div>
+            <div style="font-size:12px;color:var(--text2)">432 Hz · Binaural · 74 BPM</div>
+          </div>
+          <div style="margin-left:auto;font-size:24px;cursor:pointer" id="play-btn" onclick="togglePlay()">⏸️</div>
+        </div>
+        <div class="slider-row">
+          <div class="slider-header"><span>Volume</span><strong>65%</strong></div>
+          <input type="range" min="0" max="100" value="65"/>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <div class="scent-chip active">🌊 Ocean</div>
+          <div class="scent-chip" onclick="swapMusic(this)">🌲 Forest</div>
+          <div class="scent-chip" onclick="swapMusic(this)">🌧 Rain</div>
+          <div class="scent-chip" onclick="swapMusic(this)">🎹 Piano</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🌸 Aroma Diffuser</div>
+        <div class="slider-row">
+          <div class="slider-header"><span>Intensity</span><strong id="aroma-val">Medium</strong></div>
+          <input type="range" min="1" max="3" value="2" oninput="updateAroma(this.value)"/>
+        </div>
+        <div class="scent-row">
+          <div class="scent-chip active">🌿 Lavender</div>
+          <div class="scent-chip" onclick="swapScent(this)">🍃 Eucalyptus</div>
+          <div class="scent-chip" onclick="swapScent(this)">🌹 Rose</div>
+          <div class="scent-chip" onclick="swapScent(this)">🍋 Citrus</div>
+          <div class="scent-chip" onclick="swapScent(this)">🪵 Sandalwood</div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+        <button class="btn btn-secondary" onclick="goTo('screen-breathe')" style="font-size:13px">🫁 Add Breathing</button>
+        <button class="btn btn-danger" style="font-size:13px">⏹ End Session</button>
+      </div>
+      <div style="height:12px"></div>
+    </div>
+
+    <div class="tab-bar">
+      <div class="tab" onclick="goTo('screen-home')"><div class="tab-icon">🏠</div><div class="tab-label">Home</div></div>
+      <div class="tab" onclick="goTo('screen-moodsync')"><div class="tab-icon">🤖</div><div class="tab-label">MoodSync</div></div>
+      <div class="tab" onclick="goTo('screen-schedule')"><div class="tab-icon">📅</div><div class="tab-label">Schedule</div></div>
+      <div class="tab" onclick="goTo('screen-breathe')"><div class="tab-icon">🫁</div><div class="tab-label">Breathe</div></div>
+      <div class="tab" onclick="goTo('screen-journal')"><div class="tab-icon">📓</div><div class="tab-label">Journal</div></div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════
+       SCREEN 5: BREATHE WITH ME
+       ════════════════════════════════════════ -->
+  <div class="screen" id="screen-breathe">
+    <div class="nav-bar">
+      <div class="nav-icon" onclick="goTo('screen-home')">←</div>
+      <h2>Breathe With Me</h2>
+      <div class="nav-icon">⚙</div>
+    </div>
+
+    <div class="scroll-area">
+      <div style="text-align:center;padding:20px 0">
+        <div class="breathe-circle" id="breathe-circle">🌬</div>
+        <div class="breathe-text">
+          <div class="breathe-phase" id="breathe-phase">Inhale</div>
+          <div class="breathe-count" id="breathe-count">4</div>
+          <div class="breathe-instruction" id="breathe-instruction">Breathe in slowly through your nose</div>
+        </div>
+        <div style="display:flex;gap:12px;justify-content:center;margin-bottom:24px">
+          <button class="btn btn-primary" style="width:auto;padding:12px 32px" id="breathe-btn" onclick="toggleBreathe()">▶ Start</button>
+          <button class="btn btn-secondary" style="width:auto;padding:12px 20px" onclick="resetBreathe()">↺ Reset</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Breathing Technique</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div class="time-chip selected">4-7-8 Relax</div>
+          <div class="time-chip" onclick="selectTech(this)">Box Breathing</div>
+          <div class="time-chip" onclick="selectTech(this)">2-4 Calm</div>
+          <div class="time-chip" onclick="selectTech(this)">Triangle</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Session Progress</div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:10px">
+          <span style="color:var(--text2)">Cycles completed</span>
+          <strong id="cycle-count">0 / 5</strong>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="breathe-progress" style="width:0%;background:var(--accent)"></div>
+        </div>
+        <div style="font-size:12px;color:var(--text2);margin-top:12px;text-align:center">Complete 5 cycles to earn 🏅 Calm Badge</div>
+      </div>
+
+      <div style="height:12px"></div>
+    </div>
+
+    <div class="tab-bar">
+      <div class="tab" onclick="goTo('screen-home')"><div class="tab-icon">🏠</div><div class="tab-label">Home</div></div>
+      <div class="tab" onclick="goTo('screen-moodsync')"><div class="tab-icon">🤖</div><div class="tab-label">MoodSync</div></div>
+      <div class="tab" onclick="goTo('screen-schedule')"><div class="tab-icon">📅</div><div class="tab-label">Schedule</div></div>
+      <div class="tab active" onclick="goTo('screen-breathe')"><div class="tab-icon">🫁</div><div class="tab-label">Breathe</div></div>
+      <div class="tab" onclick="goTo('screen-journal')"><div class="tab-icon">📓</div><div class="tab-label">Journal</div></div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════
+       SCREEN 6: SCHEDULE
+       ════════════════════════════════════════ -->
+  <div class="screen" id="screen-schedule">
+    <div class="nav-bar">
+      <div class="nav-icon" onclick="goTo('screen-home')">←</div>
+      <h2>Pod Scheduler</h2>
+      <div class="nav-icon">+</div>
+    </div>
+
+    <div class="scroll-area">
+      <div class="card">
+        <div class="card-title">Select Pod</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:4px">
+          <div class="time-chip selected" onclick="selectPod(this)">🪑 Pod A</div>
+          <div class="time-chip" onclick="selectPod(this)">🪑 Pod B</div>
+          <div class="time-chip" onclick="selectPod(this)">🪑 Pod C</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Available Times – Today</div>
+        <div class="time-grid">
+          <div class="time-chip taken">9:00 AM</div>
+          <div class="time-chip taken">9:30 AM</div>
+          <div class="time-chip selected" onclick="selectTime(this)">10:00 AM</div>
+          <div class="time-chip taken">10:30 AM</div>
+          <div class="time-chip" onclick="selectTime(this)">11:00 AM</div>
+          <div class="time-chip" onclick="selectTime(this)">11:30 AM</div>
+          <div class="time-chip taken">12:00 PM</div>
+          <div class="time-chip" onclick="selectTime(this)">12:30 PM</div>
+          <div class="time-chip" onclick="selectTime(this)">1:00 PM</div>
+          <div class="time-chip taken">1:30 PM</div>
+          <div class="time-chip" onclick="selectTime(this)">2:00 PM</div>
+          <div class="time-chip" onclick="selectTime(this)">3:00 PM</div>
+        </div>
+        <div style="font-size:11px;color:var(--text3);display:flex;gap:16px">
+          <span>⬜ Available</span>
+          <span style="opacity:0.4">⬜ Taken</span>
+          <span style="color:var(--accent)">⬛ Selected</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Session Duration</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+          <div class="time-chip" onclick="selectDur(this)">10 min</div>
+          <div class="time-chip selected" onclick="selectDur(this)">15 min</div>
+          <div class="time-chip" onclick="selectDur(this)">20 min</div>
+          <div class="time-chip" onclick="selectDur(this)">25 min</div>
+          <div class="time-chip" onclick="selectDur(this)">30 min</div>
+          <div class="time-chip" onclick="selectDur(this)">45 min</div>
+        </div>
+      </div>
+
+      <div class="card" style="border-color:rgba(88,166,255,0.3)">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+          <span style="color:var(--text2);font-size:13px">Pod A · 10:00 AM · 15 min</span>
+          <span style="color:var(--accent);font-size:13px">Today</span>
+        </div>
+        <div style="font-size:12px;color:var(--text2);margin-bottom:14px">MoodSync AI will auto-configure settings 5 minutes before your session.</div>
+        <button class="btn btn-primary" onclick="goTo('screen-home')">✓ Confirm Booking</button>
+      </div>
+
+      <div style="height:12px"></div>
+    </div>
+
+    <div class="tab-bar">
+      <div class="tab" onclick="goTo('screen-home')"><div class="tab-icon">🏠</div><div class="tab-label">Home</div></div>
+      <div class="tab" onclick="goTo('screen-moodsync')"><div class="tab-icon">🤖</div><div class="tab-label">MoodSync</div></div>
+      <div class="tab active" onclick="goTo('screen-schedule')"><div class="tab-icon">📅</div><div class="tab-label">Schedule</div></div>
+      <div class="tab" onclick="goTo('screen-breathe')"><div class="tab-icon">🫁</div><div class="tab-label">Breathe</div></div>
+      <div class="tab" onclick="goTo('screen-journal')"><div class="tab-icon">📓</div><div class="tab-label">Journal</div></div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════
+       SCREEN 7: POST-SESSION JOURNAL
+       ════════════════════════════════════════ -->
+  <div class="screen" id="screen-journal">
+    <div class="nav-bar">
+      <div class="nav-icon" onclick="goTo('screen-home')">←</div>
+      <h2>Reflection Journal</h2>
+      <div class="nav-icon">📋</div>
+    </div>
+
+    <div class="scroll-area">
+      <div class="card">
+        <div class="card-title">Rate Your Session</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div>
+            <div style="font-size:12px;color:var(--text2);margin-bottom:8px">Stress Before</div>
+            <div class="star-row" id="stars-before">
+              <div class="star lit" onclick="rateBefore(1)">⭐</div>
+              <div class="star lit" onclick="rateBefore(2)">⭐</div>
+              <div class="star lit" onclick="rateBefore(3)">⭐</div>
+              <div class="star lit" onclick="rateBefore(4)">⭐</div>
+              <div class="star" onclick="rateBefore(5)">⭐</div>
+            </div>
+            <div style="text-align:center;font-size:12px;color:var(--stress-med)">4/5 High</div>
+          </div>
+          <div>
+            <div style="font-size:12px;color:var(--text2);margin-bottom:8px">Stress After</div>
+            <div class="star-row" id="stars-after">
+              <div class="star lit" onclick="rateAfter(1)">⭐</div>
+              <div class="star lit" onclick="rateAfter(2)">⭐</div>
+              <div class="star" onclick="rateAfter(3)">⭐</div>
+              <div class="star" onclick="rateAfter(4)">⭐</div>
+              <div class="star" onclick="rateAfter(5)">⭐</div>
+            </div>
+            <div style="text-align:center;font-size:12px;color:var(--stress-low)">2/5 Low ✓</div>
+          </div>
+        </div>
+        <div style="background:rgba(63,185,80,0.1);border-radius:10px;padding:10px;text-align:center;margin-top:12px;font-size:13px;color:var(--stress-low)">
+          🎉 50% stress reduction this session!
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">How did the session feel?</div>
+        <div class="mood-grid">
+          <div class="mood-chip selected" onclick="selectMood(this)">😌<span>Calmer</span></div>
+          <div class="mood-chip" onclick="selectMood(this)">😊<span>Refreshed</span></div>
+          <div class="mood-chip" onclick="selectMood(this)">🧠<span>Focused</span></div>
+          <div class="mood-chip" onclick="selectMood(this)">😴<span>Sleepy</span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Your Reflection</div>
+        <textarea class="journal-textarea" rows="5" placeholder="What's on your mind? How are you feeling after the session...">The ocean sounds really helped me unwind. Felt the tension in my shoulders release after about 5 minutes. The lavender was subtle but effective.</textarea>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+          <div class="scent-chip active">#relaxed</div>
+          <div class="scent-chip">#productive</div>
+          <div class="scent-chip">#focused</div>
+          <div class="scent-chip">+ add tag</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">What worked best?</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <div class="scent-chip active">🌊 Ocean sounds</div>
+          <div class="scent-chip active">🌿 Lavender</div>
+          <div class="scent-chip">🔵 Blue light</div>
+          <div class="scent-chip">🪑 Biometric chair</div>
+        </div>
+        <div style="font-size:12px;color:var(--text2);margin-top:12px">✅ MoodSync will prioritize these in future sessions.</div>
+      </div>
+
+      <button class="btn btn-primary" style="margin-bottom:16px">Save Journal Entry</button>
+      <div style="height:12px"></div>
+    </div>
+
+    <div class="tab-bar">
+      <div class="tab" onclick="goTo('screen-home')"><div class="tab-icon">🏠</div><div class="tab-label">Home</div></div>
+      <div class="tab" onclick="goTo('screen-moodsync')"><div class="tab-icon">🤖</div><div class="tab-label">MoodSync</div></div>
+      <div class="tab" onclick="goTo('screen-schedule')"><div class="tab-icon">📅</div><div class="tab-label">Schedule</div></div>
+      <div class="tab" onclick="goTo('screen-breathe')"><div class="tab-icon">🫁</div><div class="tab-label">Breathe</div></div>
+      <div class="tab active" onclick="goTo('screen-journal')"><div class="tab-icon">📓</div><div class="tab-label">Journal</div></div>
+    </div>
+  </div>
+
+</div><!-- /phone-frame -->
+
+<script>
+// ── NAVIGATION ──
+function goTo(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ── MOOD SELECT ──
+function selectMood(el) {
+  el.closest('.mood-grid').querySelectorAll('.mood-chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+// ── LIGHT SLIDER ──
+const lightLabels = ['Warm Amber', 'Cool Blue', 'Forest Green', 'Violet', 'White'];
+function updateLight(v) {
+  document.getElementById('light-val').innerText = lightLabels[v-1] || 'Custom';
+}
+
+// ── AROMA SLIDER ──
+function updateAroma(v) {
+  const labels = ['Subtle', 'Medium', 'Strong'];
+  document.getElementById('aroma-val').innerText = labels[v-1];
+}
+
+// ── MUSIC/SCENT TOGGLE ──
+function swapMusic(el) {
+  el.closest('.card').querySelectorAll('.scent-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+}
+function swapScent(el) {
+  el.closest('.scent-row').querySelectorAll('.scent-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+}
+function selectTech(el) {
+  el.closest('.card').querySelectorAll('.time-chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+}
+function selectPod(el) {
+  el.closest('.card').querySelectorAll('.time-chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+}
+function selectTime(el) {
+  if(el.classList.contains('taken')) return;
+  el.closest('.time-grid').querySelectorAll('.time-chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+}
+function selectDur(el) {
+  el.closest('.card').querySelectorAll('.time-chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+// ── PLAY TOGGLE ──
+let playing = true;
+function togglePlay() {
+  playing = !playing;
+  document.getElementById('play-btn').innerText = playing ? '⏸️' : '▶️';
+}
+
+// ── BREATHE ANIMATION ──
+let breatheRunning = false;
+let breatheInterval = null;
+let cycleCount = 0;
+const maxCycles = 5;
+const phases = [
+  { name: 'Inhale', count: 4, instruction: 'Breathe in slowly through your nose', expand: true },
+  { name: 'Hold', count: 7, instruction: 'Hold your breath gently', expand: true },
+  { name: 'Exhale', count: 8, instruction: 'Release slowly through your mouth', expand: false },
+];
+let phaseIdx = 0, countdown = phases[0].count;
+
+function toggleBreathe() {
+  breatheRunning = !breatheRunning;
+  document.getElementById('breathe-btn').innerText = breatheRunning ? '⏸ Pause' : '▶ Resume';
+  if(breatheRunning) runBreathe();
+  else clearInterval(breatheInterval);
+}
+
+function runBreathe() {
+  breatheInterval = setInterval(() => {
+    countdown--;
+    document.getElementById('breathe-count').innerText = countdown;
+    if(countdown <= 0) {
+      phaseIdx = (phaseIdx + 1) % phases.length;
+      if(phaseIdx === 0) {
+        cycleCount++;
+        let pct = Math.min((cycleCount/maxCycles)*100, 100);
+        document.getElementById('cycle-count').innerText = cycleCount + ' / ' + maxCycles;
+        document.getElementById('breathe-progress').style.width = pct + '%';
+      }
+      const phase = phases[phaseIdx];
+      countdown = phase.count;
+      document.getElementById('breathe-phase').innerText = phase.name;
+      document.getElementById('breathe-instruction').innerText = phase.instruction;
+      const circle = document.getElementById('breathe-circle');
+      if(phase.expand) circle.classList.add('expand');
+      else circle.classList.remove('expand');
+    }
+  }, 1000);
+}
+
+function resetBreathe() {
+  clearInterval(breatheInterval);
+  breatheRunning = false;
+  phaseIdx = 0; countdown = phases[0].count; cycleCount = 0;
+  document.getElementById('breathe-btn').innerText = '▶ Start';
+  document.getElementById('breathe-phase').innerText = 'Inhale';
+  document.getElementById('breathe-count').innerText = '4';
+  document.getElementById('breathe-instruction').innerText = 'Breathe in slowly through your nose';
+  document.getElementById('breathe-circle').classList.remove('expand');
+  document.getElementById('cycle-count').innerText = '0 / 5';
+  document.getElementById('breathe-progress').style.width = '0%';
+}
+
+function rateBefore(n) {
+  document.getElementById('stars-before').querySelectorAll('.star').forEach((s,i) => s.classList.toggle('lit', i < n));
+}
+function rateAfter(n) {
+  document.getElementById('stars-after').querySelectorAll('.star').forEach((s,i) => s.classList.toggle('lit', i < n));
+}
+</script>
+</body>
+</html>
