@@ -100,7 +100,7 @@ cp .env.example .env
 streamlit run app.py
 ```
 
-Open your browser at **** and enjoy!
+Open your browser at **https://mindfulwork4981.streamlit.app/** and enjoy!
 
 ---
 
